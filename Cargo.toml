@@ -1,0 +1,21 @@
+[package]
+name = "fui"
+version = "0.1.0"
+authors = ["xliiv <tymoteusz.jankowski@gmail.com>"]
+
+[dependencies]
+regex = "0.2"
+serde_json = "1.0"
+walkdir = "2"
+
+[dependencies.cursive]
+#version = "0.7"
+git = "git://github.com/gyscos/Cursive.git"
+default-features = false
+
+[features]
+default = ["ncurses-backend"]
+ncurses-backend = ["cursive/ncurses-backend"]
+pancurses-backend = ["cursive/pancurses-backend"]
+termion-backend = ["cursive/termion-backend"]
+blt-backend = ["cursive/blt-backend"]
