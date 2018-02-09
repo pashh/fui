@@ -29,13 +29,13 @@ impl Multiselect {
             .child(Panel::new(
                 Autocomplete::new(feeder)
                     //TODO: allow customization?
-                    .fixed_width(select_width),
+                    .full_width(),
             ))
             .child(DummyView.fixed_width(separator_width))
             .child(Panel::new(
                 OnEventView::new(SelectView::<String>::new()
                             //TODO: allow customization?
-                            .fixed_width(select_width))
+                            .full_width())
                     .on_pre_event_inner(Event::CtrlChar('p'), |s| {
                     s.get_inner_mut().select_up(1);
                     Some(EventResult::Consumed(None))
