@@ -145,6 +145,11 @@ impl ViewWrapper for Autocomplete {
                 self.refresh_listing();
                 EventResult::Consumed(None)
             }
+            Event::CtrlChar('u') => {
+                self.get_edit_view_mut().set_content("");
+                self.refresh_listing();
+                EventResult::Consumed(None)
+            }
             Event::CtrlChar('p') => {
                 // move selection up
                 let select = self.get_select_view_mut();
