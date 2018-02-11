@@ -26,11 +26,9 @@ impl Multiselect {
         let select_width = 30;
         let separator_width = 1;
         let layout = LinearLayout::horizontal()
-            .child(Panel::new(
-                Autocomplete::new(feeder)
+            .child(Panel::new(Autocomplete::new(feeder)
                     //TODO: allow customization?
-                    .full_width(),
-            ))
+                    .full_width()))
             .child(DummyView.fixed_width(separator_width))
             .child(Panel::new(
                 OnEventView::new(SelectView::<String>::new()
