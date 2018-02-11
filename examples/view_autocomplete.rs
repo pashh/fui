@@ -14,16 +14,17 @@ use fui::views::Autocomplete;
 fn handler(c: &mut Cursive, submitted: Rc<String>) {
     let text = format!("submitted {:?}", submitted);
     c.add_layer(Dialog::info(text));
+    //eprintln!("{:?}", text);
 }
 
 fn main() {
     let mut c = Cursive::new();
 
     let widget = LinearLayout::vertical()
-        .child(Autocomplete::new(DirItems::current_dir().dirs()).on_submit(handler))
+        .child(Autocomplete::new(DirItems::new()).on_submit(handler))
         .child(DummyView)
         .child(
-            Autocomplete::new(DirItems::current_dir().files())
+            Autocomplete::new(DirItems::new())
             // allow submitting values outside completition
             .submit_anything()
             .on_submit(handler),

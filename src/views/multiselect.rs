@@ -23,7 +23,6 @@ pub struct Multiselect {
 
 impl Multiselect {
     pub fn new<T: Feeder>(feeder: T) -> Self {
-        let select_width = 30;
         let separator_width = 1;
         let layout = LinearLayout::horizontal()
             .child(Panel::new(Autocomplete::new(feeder)

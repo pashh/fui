@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate cursive as _cursive;
+extern crate glob;
 extern crate regex;
 extern crate serde_json;
 #[cfg(test)]

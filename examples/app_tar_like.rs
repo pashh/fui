@@ -9,7 +9,7 @@ use fui::feeders::DirItems;
 use fui::fields::{Autocomplete, Text};
 use fui::form::FormView;
 use fui::utils::cwd;
-use fui::validators::{OneOf, Required};
+use fui::validators::{FileExists, OneOf, Required};
 use fui::{Fui, Value};
 
 fn hdlr(v: Value) {
@@ -34,14 +34,16 @@ fn main() {
             "ARCHIVE-FILES: Create an archive from files",
             FormView::new()
                 .field(
-                    Autocomplete::new("file-to-archive", DirItems::current_dir().files())
+                    Autocomplete::new("file-to-archive", DirItems::new())
                         .help("Files which should be archived")
                         //TODO: .multi(true)
-                        .validator(Required),
+                        .validator(Required)
+                        .validator(FileExists),
                 )
                 .field(
                     Text::new("target")
                         .help("Name of archive file")
+                        // TODO: DirItemNotExist?
                         .validator(Required),
                 )
                 .field(compression_format()),
@@ -51,14 +53,16 @@ fn main() {
             "EXTRACT-TO-DIR: Extract an archive in a target folder",
             FormView::new()
                 .field(
-                    Autocomplete::new("archive-path", DirItems::current_dir().files())
+                    Autocomplete::new("archive-path", DirItems::new())
                         .help("Path to compressed file")
-                        .validator(Required),
+                        .validator(Required)
+                        .validator(FileExists),
                 )
                 .field(
-                    Autocomplete::new("dst-dir", DirItems::current_dir().dirs())
+                    Autocomplete::new("dst-dir", DirItems::dirs())
                         .initial(cwd())
-                        .help("Dir where extracted files should land"),
+                        .help("Dir where extracted files should land")
+                        .validator(Required),
                 )
                 .field(compression_format()),
             hdlr,
@@ -67,8 +71,9 @@ fn main() {
             "LIST-ARCHIVE: List the contents of a tar file",
             FormView::new()
                 .field(
-                    Autocomplete::new("archive-file", DirItems::current_dir().files())
-                        .help("Path to archive"),
+                    Autocomplete::new("archive-file", DirItems::new())
+                        .help("Path to archive")
+                        .validator(FileExists),
                 )
                 .field(compression_format()),
             hdlr,

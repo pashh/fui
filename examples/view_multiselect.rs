@@ -22,7 +22,7 @@ fn main() {
     let mut c = Cursive::new();
 
     let widget = LinearLayout::vertical().child(
-        Multiselect::new(DirItems::current_dir().dirs())
+        Multiselect::new(DirItems::new())
                 // allows user to select single item many items
                 //TODO: .redundant_selection()
                 // allows user to select single out of completition
