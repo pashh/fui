@@ -1,9 +1,7 @@
-use std::env::current_dir;
+use glob::glob;
+use std::env;
 use std::fmt::Display;
-use std::path::PathBuf;
 use std::rc::Rc;
-
-use walkdir::WalkDir;
 
 // TODO: this should be replaced with regular Iterator?
 pub trait Feeder: 'static {
@@ -11,63 +9,183 @@ pub trait Feeder: 'static {
 }
 
 #[derive(Clone, Debug)]
-enum FileType {
-    File,
+enum DirItemType {
     Dir,
     All,
 }
 
 #[derive(Clone, Debug)]
 pub struct DirItems {
-    working_dir: PathBuf,
-    kind: FileType,
+    dir_item_type: DirItemType,
 }
 
 impl DirItems {
-    pub fn current_dir() -> Self {
+    pub fn new() -> Self {
         DirItems {
-            working_dir: current_dir().expect("Can't get current dir"),
-            kind: FileType::All,
+            dir_item_type: DirItemType::All,
         }
     }
-
-    pub fn dir(path: PathBuf) -> Self {
+    pub fn dirs() -> Self {
         DirItems {
-            working_dir: path,
-            kind: FileType::All,
+            dir_item_type: DirItemType::Dir,
         }
-    }
-
-    pub fn dirs(mut self) -> DirItems {
-        self.kind = FileType::Dir;
-        self
-    }
-
-    pub fn files(mut self) -> DirItems {
-        self.kind = FileType::File;
-        self
     }
 }
 
 impl Feeder for DirItems {
+    // TODO: text: Option<&str>?
     fn query(&self, text: &str, _position: isize, items_count: usize) -> Vec<String> {
-        WalkDir::new(&self.working_dir)
-            .into_iter()
-            .filter(|x| {
-                let path = x.as_ref().unwrap().path();
-                match self.kind {
-                    FileType::File => path.is_file(),
-                    FileType::Dir => path.is_dir(),
-                    FileType::All => true,
+        let path = if text == "" {
+            format!("./")
+        } else if text.starts_with('~') {
+            let path = text.replace("~", env::home_dir().unwrap().to_str().unwrap());
+            format!("{}", path)
+        } else {
+            format!("{}", text)
+        };
+        let path =
+            //TODO: replace current solution with:
+            // like /home/user/xxx -> /home/user/*xxx*
+            // like /home/user/*xxx -> /home/user/*xxx
+            // like /home/user/xxx* -> /home/user/xxx*
+            // like **/xxx -> **/*xxx*
+            // like **/*xxx -> **/*xxx
+            // like **/xxx* -> **/xxx*
+            if path.contains("*") {
+                path
+            } else {
+                format!("{}*", path)
+            };
+        //TODO: use https://doc.rust-lang.org/glob/glob/struct.MatchOptions.html
+        // to smart-case
+
+        if let Ok(v) = glob(&path) {
+            v.filter(|x| {
+                if let Err(e) = x.as_ref() {
+                    eprintln!("{:?}", e);
+                    false
+                } else {
+                    true
                 }
-            })
-            .filter(|x| {
-                let path = x.as_ref().unwrap().path();
-                path.to_str().unwrap().to_lowercase().contains(text)
-            })
-            .map(|x| format!("{}", x.unwrap().path().display()))
-            .take(items_count)
-            .collect()
+            }).filter(|x| {
+                    let path = x.as_ref().unwrap().metadata().unwrap();
+                    match self.dir_item_type {
+                        DirItemType::Dir => path.is_dir(),
+                        DirItemType::All => true,
+                    }
+                })
+                .map(|x| {
+                    let path = x.unwrap();
+                    // TODO: show full path as option
+                    // use std::fs;
+                    // let full_path = fs::canonicalize(path);
+                    let full_path = Some(path);
+                    let text = format!("{}", full_path.unwrap().display());
+                    text
+                })
+                .skip(_position as usize)
+                .take(items_count)
+                .collect()
+        } else {
+            Vec::new()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+    use std::fs;
+    use std::iter::FromIterator;
+
+    fn expected(start: &str) -> HashSet<String> {
+        let found = {
+            if let Ok(v) = fs::read_dir(start) {
+                v.map(|x| {
+                    let p = format!("{}", x.as_ref().unwrap().path().display());
+                    p.replace("./", "")
+                }).collect()
+            } else {
+                Vec::new()
+            }
+        };
+        HashSet::<String>::from_iter(found)
+    }
+
+    #[test]
+    fn test_dir_item_works_with_current_dir() {
+        let di = DirItems::new();
+        let found = di.query("", 0, 100);
+        assert_eq!(HashSet::<String>::from_iter(found), expected("./"));
+    }
+
+    #[test]
+    fn test_dir_item_works_with_current_subdir() {
+        let di = DirItems::new();
+        let found = di.query("examples/", 0, 100);
+        assert_eq!(HashSet::<String>::from_iter(found), expected("./examples"));
+    }
+
+    #[test]
+    fn test_dir_item_works_with_current_missing_dir() {
+        let di = DirItems::new();
+        let found = di.query("missing-dir", 0, 10);
+        assert_eq!(
+            HashSet::<String>::from_iter(found),
+            expected("./missing-dir")
+        );
+    }
+
+    #[test]
+    fn test_dir_item_works_with_homedir() {
+        let di = DirItems::new();
+        let found = di.query("~/", 0, 200);
+        let homedir = env::home_dir().unwrap();
+        assert_eq!(
+            HashSet::<String>::from_iter(found),
+            expected(homedir.to_str().unwrap())
+        );
+    }
+
+    #[test]
+    fn test_dir_item_works_with_root_dir() {
+        let di = DirItems::new();
+        let found = di.query("/root", 0, 100);
+        assert_eq!(
+            HashSet::<String>::from_iter(found),
+            HashSet::<String>::from_iter(vec!["/root".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_dir_item_works_with_root_subdir() {
+        let di = DirItems::new();
+        let found = di.query("/root/", 0, 100);
+        assert_eq!(
+            HashSet::<String>::from_iter(found),
+            HashSet::<String>::new()
+        );
+    }
+
+    #[test]
+    fn test_dir_item_works_with_top_missing_dir() {
+        let di = DirItems::new();
+        let found = di.query("/missing-dir", 0, 10);
+        assert_eq!(
+            HashSet::<String>::from_iter(found),
+            HashSet::<String>::new()
+        );
+    }
+
+    #[test]
+    fn test_dir_item_works_with_broken_glob() {
+        let di = DirItems::new();
+        let found = di.query("**.", 0, 10);
+        assert_eq!(
+            HashSet::<String>::from_iter(found),
+            HashSet::<String>::new()
+        );
     }
 }
 
