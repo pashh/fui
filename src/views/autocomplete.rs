@@ -89,7 +89,7 @@ impl Autocomplete {
     }
 
     /// Checks if value comes from completition
-    fn is_value_from_select(&self, to_check: &str) -> bool {
+    pub fn is_value_from_select(&self, to_check: &str) -> bool {
         let select = self.get_select_view();
         let mut idx = 0;
         while let Some((_, v)) = select.get_item(idx) {

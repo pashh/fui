@@ -15,6 +15,7 @@ type OnDeselect = Option<Rc<Fn(&mut Cursive, Rc<String>)>>;
 
 pub struct Multiselect {
     view: LinearLayout,
+    select_anything: bool,
     selected_idx: u8,
     options_idx: u8,
     on_select: OnSelect,
@@ -45,10 +46,10 @@ impl Multiselect {
 
         Multiselect {
             view: layout,
+            select_anything: false,
             // remove this when suitable tests are added?
             options_idx: 0,
             selected_idx: 2,
-
             on_select: None,
             on_deselect: None,
         }
@@ -92,6 +93,12 @@ impl Multiselect {
         }
     }
 
+    /// Allow to submit values outside of completition
+    pub fn select_anything(mut self) -> Self {
+        self.select_anything = true;
+        self
+    }
+
     pub fn set_on_select<F>(&mut self, callback: F)
     where
         F: Fn(&mut Cursive, Rc<String>) + 'static,
@@ -133,13 +140,18 @@ impl ViewWrapper for Multiselect {
                 let focused = self.view.get_focus_index();
                 if focused == self.options_idx as usize {
                     // on select
-                    let selected = self.select_item();
-                    let cb = self.on_select.clone().map(|on_select| {
-                        Callback::from_fn(move |c| {
-                            on_select(c, selected.clone());
-                        })
-                    });
-                    return EventResult::Consumed(cb);
+                    let typed_value = self.get_options_view().get_value();
+                    let from_select = self.get_options_view().is_value_from_select(&*typed_value);
+                    if (typed_value.len() > 0) & (self.select_anything | from_select) {
+                        self.select_item();
+                        let cb = self.on_select.clone().map(|on_select| {
+                            Callback::from_fn(move |c| {
+                                on_select(c, typed_value.clone());
+                            })
+                        });
+                        return EventResult::Consumed(cb);
+                    }
+                    return EventResult::Ignored;
                 }
                 if focused == self.selected_idx as usize {
                     // on deselect
