@@ -88,6 +88,19 @@ impl Autocomplete {
         self.get_edit_view_mut().set_content((&*selection).clone());
     }
 
+    /// Checks if value comes from completition
+    fn is_value_from_select(&self, to_check: &str) -> bool {
+        let select = self.get_select_view();
+        let mut idx = 0;
+        while let Some((_, v)) = select.get_item(idx) {
+            idx += 1;
+            if to_check == *v {
+                return true;
+            }
+        }
+        return false;
+    }
+
     fn get_edit_view(&self) -> &EditView {
         self.view
             .get_child(0)
@@ -179,11 +192,15 @@ impl ViewWrapper for Autocomplete {
                 self.with_view_mut(|v| v.on_event(event))
                     .unwrap_or(EventResult::Ignored);
 
-                if self.get_select_view_mut().is_empty() & !self.submit_anything {
-                    return EventResult::Ignored;
+                let to_submit = self.get_edit_view().get_content();
+
+                if !self.submit_anything {
+                    let from_select = self.is_value_from_select(&*to_submit);
+                    if !from_select {
+                        return EventResult::Ignored;
+                    }
                 }
 
-                let to_submit = self.get_edit_view().get_content();
                 let cb = self.on_submit
                     .clone()
                     .map(|on_submit| Callback::from_fn(move |c| on_submit(c, to_submit.clone())));
