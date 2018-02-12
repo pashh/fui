@@ -82,6 +82,12 @@ impl Autocomplete {
         select.add_all_str((*feeder).query(text.as_ref(), 0, shown_count).into_iter());
     }
 
+    /// Copy selected text to edit view
+    fn selection_to_edit(&mut self) {
+        let selection = self.get_select_view_mut().selection();
+        self.get_edit_view_mut().set_content((&*selection).clone());
+    }
+
     fn get_edit_view(&self) -> &EditView {
         self.view
             .get_child(0)
@@ -152,34 +158,32 @@ impl ViewWrapper for Autocomplete {
             }
             Event::CtrlChar('p') => {
                 // move selection up
-                let select = self.get_select_view_mut();
-                select.select_up(1);
+                {
+                    let select = self.get_select_view_mut();
+                    select.select_up(1);
+                }
+                self.selection_to_edit();
                 EventResult::Consumed(None)
             }
             Event::CtrlChar('n') => {
                 // move selection down
-                let select = self.get_select_view_mut();
-                select.select_down(1);
+                {
+                    let select = self.get_select_view_mut();
+                    select.select_down(1);
+                }
+                self.selection_to_edit();
                 EventResult::Consumed(None)
             }
             Event::Key(Key::Enter) => {
                 // submitting
                 self.with_view_mut(|v| v.on_event(event))
                     .unwrap_or(EventResult::Ignored);
-                let to_submit = {
-                    if self.get_select_view_mut().is_empty() {
-                        if self.submit_anything {
-                            self.get_edit_view().get_content()
-                        } else {
-                            return EventResult::Ignored;
-                        }
-                    } else {
-                        let text_in_edit = self.get_select_view_mut().selection();
-                        self.get_edit_view_mut()
-                            .set_content((&*text_in_edit).clone());
-                        text_in_edit
-                    }
-                };
+
+                if self.get_select_view_mut().is_empty() & !self.submit_anything {
+                    return EventResult::Ignored;
+                }
+
+                let to_submit = self.get_edit_view().get_content();
                 let cb = self.on_submit
                     .clone()
                     .map(|on_submit| Callback::from_fn(move |c| on_submit(c, to_submit.clone())));
