@@ -86,9 +86,8 @@ impl FormView {
                 for (idx, field) in self.fields.iter().enumerate() {
                     let label = field.get_label();
                     let view = self.view.get_child_mut(idx).unwrap();
-                    if let Some(e) = errors.get(label) {
-                        field.set_widget_error(view, e);
-                    }
+                    let e = errors.get(label).map(|x| x.as_ref()).unwrap_or("");
+                    field.set_widget_error(view, e);
                 }
                 EventResult::Consumed(None)
             }
