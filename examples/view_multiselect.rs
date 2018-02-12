@@ -29,10 +29,15 @@ fn main() {
         )
         .child(
             Multiselect::new(DirItems::new())
-                // allows user to select single item many items
-                //TODO: .redundant_selection()
-                // allows user to select single out of completition
+                // allows to select items out of completition
                 .select_anything()
+                .on_select(|c, text| handler(c, "on_select", text))
+                .on_deselect(|c, text| handler(c, "on_deselect", text)),
+        )
+        .child(
+            Multiselect::new(DirItems::new())
+                // allows to select single item many times
+                .redundant_selection()
                 .on_select(|c, text| handler(c, "on_select", text))
                 .on_deselect(|c, text| handler(c, "on_deselect", text)),
         );
