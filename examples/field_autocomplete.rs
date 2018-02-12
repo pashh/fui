@@ -29,7 +29,7 @@ fn main() {
         .field(Autocomplete::new("initialized-field", options.clone()).initial("3"))
         .field(Autocomplete::new("with-validator", options.clone()).validator(Required))
         .field(
-            Autocomplete::new("with-validator", options.clone()).validator(OneOf(options.clone())),
+            Autocomplete::new("with-validators", options.clone()).validator(OneOf(options.clone())),
         )
         .field(
             Autocomplete::new("all-in-one", options.clone())
