@@ -8,6 +8,7 @@ use cursive::view::ViewWrapper;
 use cursive::views::{EditView, LinearLayout, SelectView};
 
 use feeders::Feeder;
+use super::is_value_from_select;
 
 // TODO: selecting should auto load next/prev items
 // TODO: better performance while typing
@@ -91,14 +92,7 @@ impl Autocomplete {
     /// Checks if value comes from completition
     pub fn is_value_from_select(&self, to_check: &str) -> bool {
         let select = self.get_select_view();
-        let mut idx = 0;
-        while let Some((_, v)) = select.get_item(idx) {
-            idx += 1;
-            if to_check == *v {
-                return true;
-            }
-        }
-        return false;
+        is_value_from_select(select, to_check)
     }
 
     fn get_edit_view(&self) -> &EditView {

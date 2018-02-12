@@ -8,6 +8,7 @@ use cursive::view::ViewWrapper;
 use cursive::views::{BoxView, DummyView, LinearLayout, OnEventView, Panel, SelectView};
 
 use feeders::Feeder;
+use super::is_value_from_select;
 use views::Autocomplete;
 
 type OnSelect = Option<Rc<Fn(&mut Cursive, Rc<String>)>>;
@@ -16,6 +17,7 @@ type OnDeselect = Option<Rc<Fn(&mut Cursive, Rc<String>)>>;
 pub struct Multiselect {
     view: LinearLayout,
     select_anything: bool,
+    redundant_selection: bool,
     selected_idx: u8,
     options_idx: u8,
     on_select: OnSelect,
@@ -47,6 +49,7 @@ impl Multiselect {
         Multiselect {
             view: layout,
             select_anything: false,
+            redundant_selection: false,
             // remove this when suitable tests are added?
             options_idx: 0,
             selected_idx: 2,
@@ -63,6 +66,16 @@ impl Multiselect {
             .downcast_ref::<Panel<BoxView<Autocomplete>>>()
             .unwrap();
         box_view.get_inner().get_inner()
+    }
+
+    fn get_selected_view(&self) -> &SelectView<String> {
+        let box_view = self.view
+            .get_child(self.selected_idx as usize)
+            .unwrap()
+            .as_any()
+            .downcast_ref::<Panel<OnEventView<BoxView<SelectView<String>>>>>()
+            .unwrap();
+        box_view.get_inner().get_inner().get_inner()
     }
 
     fn get_selected_view_mut(&mut self) -> &mut SelectView<String> {
@@ -82,6 +95,27 @@ impl Multiselect {
         selected_text
     }
 
+    /// Checks if value is already selected
+    pub fn is_value_selected(&self, to_check: &str) -> bool {
+        let select = self.get_selected_view();
+        is_value_from_select(select, to_check)
+    }
+
+    /// Returns successfully selected item or None
+    fn try_select_item(&mut self) -> Option<Rc<String>> {
+        let typed_value = self.get_options_view().get_value();
+        let from_select = self.get_options_view().is_value_from_select(&*typed_value);
+        if (typed_value.len() > 0) & (self.select_anything | from_select) {
+            if !self.redundant_selection & self.is_value_selected(&*typed_value) {
+                None
+            } else {
+                Some(self.select_item())
+            }
+        } else {
+            None
+        }
+    }
+
     fn deselect_item(&mut self) -> Option<Rc<String>> {
         let selected_view = self.get_selected_view_mut();
         if let Some(idx) = selected_view.selected_id() {
@@ -93,9 +127,15 @@ impl Multiselect {
         }
     }
 
-    /// Allow to submit values outside of completition
+    /// Allows submitting values outside of completition
     pub fn select_anything(mut self) -> Self {
         self.select_anything = true;
+        self
+    }
+
+    /// Allows selecting single item many times
+    pub fn redundant_selection(mut self) -> Self {
+        self.redundant_selection = true;
         self
     }
 
@@ -140,18 +180,14 @@ impl ViewWrapper for Multiselect {
                 let focused = self.view.get_focus_index();
                 if focused == self.options_idx as usize {
                     // on select
-                    let typed_value = self.get_options_view().get_value();
-                    let from_select = self.get_options_view().is_value_from_select(&*typed_value);
-                    if (typed_value.len() > 0) & (self.select_anything | from_select) {
-                        self.select_item();
+                    if let Some(v) = self.try_select_item() {
                         let cb = self.on_select.clone().map(|on_select| {
                             Callback::from_fn(move |c| {
-                                on_select(c, typed_value.clone());
+                                on_select(c, v.clone());
                             })
                         });
                         return EventResult::Consumed(cb);
                     }
-                    return EventResult::Ignored;
                 }
                 if focused == self.selected_idx as usize {
                     // on deselect
