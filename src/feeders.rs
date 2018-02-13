@@ -1,5 +1,7 @@
-use glob::glob;
+use glob::{glob_with, MatchOptions};
 use std::env;
+use std::fs;
+use std::path::Path;
 use std::fmt::Display;
 use std::rc::Rc;
 
@@ -17,23 +19,54 @@ enum DirItemType {
 #[derive(Clone, Debug)]
 pub struct DirItems {
     dir_item_type: DirItemType,
+    use_full_paths: bool,
 }
 
 impl DirItems {
     pub fn new() -> Self {
         DirItems {
             dir_item_type: DirItemType::All,
+            use_full_paths: false,
         }
     }
     pub fn dirs() -> Self {
         DirItems {
             dir_item_type: DirItemType::Dir,
+            use_full_paths: false,
         }
+    }
+
+    pub fn use_full_paths(mut self) -> Self {
+        self.use_full_paths = true;
+        self
+    }
+}
+
+/// Add star to last component of path
+fn add_glob<P: AsRef<str>>(path: P) -> String {
+    if path.as_ref().ends_with("/") {
+        return format!("{}*", path.as_ref());
+    }
+    let as_path = Path::new(path.as_ref());
+    if let Some(c) = as_path.components().last() {
+        let last = c.as_os_str().to_str().unwrap();
+        let converted = if !last.contains('*') {
+            let last = if last == "/" {
+                format!("{}*", last)
+            } else {
+                format!("*{}*", last)
+            };
+            as_path.with_file_name(last)
+        } else {
+            as_path.to_path_buf()
+        };
+        format!("{}", converted.display())
+    } else {
+        "*".to_string()
     }
 }
 
 impl Feeder for DirItems {
-    // TODO: text: Option<&str>?
     fn query(&self, text: &str, _position: isize, items_count: usize) -> Vec<String> {
         let path = if text == "" {
             format!("./")
@@ -43,23 +76,15 @@ impl Feeder for DirItems {
         } else {
             format!("{}", text)
         };
-        let path =
-            //TODO: replace current solution with:
-            // like /home/user/xxx -> /home/user/*xxx*
-            // like /home/user/*xxx -> /home/user/*xxx
-            // like /home/user/xxx* -> /home/user/xxx*
-            // like **/xxx -> **/*xxx*
-            // like **/*xxx -> **/*xxx
-            // like **/xxx* -> **/xxx*
-            if path.contains("*") {
-                path
-            } else {
-                format!("{}*", path)
-            };
-        //TODO: use https://doc.rust-lang.org/glob/glob/struct.MatchOptions.html
-        // to smart-case
-
-        if let Ok(v) = glob(&path) {
+        let path = add_glob(path);
+        if let Ok(v) = glob_with(
+            &path,
+            &MatchOptions {
+                case_sensitive: text.chars().any(|c| c.is_uppercase()),
+                require_literal_separator: false,
+                require_literal_leading_dot: true,
+            },
+        ) {
             v.filter(|x| {
                 if let Err(e) = x.as_ref() {
                     eprintln!("{:?}", e);
@@ -76,11 +101,12 @@ impl Feeder for DirItems {
                 })
                 .map(|x| {
                     let path = x.unwrap();
-                    // TODO: show full path as option
-                    // use std::fs;
-                    // let full_path = fs::canonicalize(path);
-                    let full_path = Some(path);
-                    let text = format!("{}", full_path.unwrap().display());
+                    let path = if self.use_full_paths {
+                        fs::canonicalize(path).unwrap()
+                    } else {
+                        path
+                    };
+                    let text = format!("{}", path.display());
                     text
                 })
                 .skip(_position as usize)
@@ -102,7 +128,10 @@ mod tests {
     fn expected(start: &str) -> HashSet<String> {
         let found = {
             if let Ok(v) = fs::read_dir(start) {
-                v.map(|x| {
+                v.filter(|x| {
+                    !x.as_ref().unwrap().file_name().to_str().unwrap().starts_with(".")
+                })
+                .map(|x| {
                     let p = format!("{}", x.as_ref().unwrap().path().display());
                     p.replace("./", "")
                 }).collect()
@@ -111,6 +140,19 @@ mod tests {
             }
         };
         HashSet::<String>::from_iter(found)
+    }
+
+    #[test]
+    fn test_glob_is_added_ok() {
+        assert_eq!(add_glob(""), "*");
+        assert_eq!(add_glob("/"), "/*");
+        assert_eq!(add_glob("/home/"), "/home/*");
+        assert_eq!(add_glob("/home/user/xxx"), "/home/user/*xxx*");
+        assert_eq!(add_glob("/home/user/*xxx"), "/home/user/*xxx");
+        assert_eq!(add_glob("/home/user/xxx*"), "/home/user/xxx*");
+        assert_eq!(add_glob("**/xxx"), "**/*xxx*");
+        assert_eq!(add_glob("**/*xxx"), "**/*xxx");
+        assert_eq!(add_glob("**/xxx*"), "**/xxx*");
     }
 
     #[test]
