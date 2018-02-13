@@ -24,6 +24,9 @@ fn main() {
         .child(Autocomplete::new(vec!["option1", "option2", "option3", ".."]).on_submit(handler))
         .child(DummyView)
         .child(Autocomplete::new(DirItems::new()).on_submit(handler))
+        .child(DummyView)
+        // completes paths as absolute paths
+        .child(Autocomplete::new(DirItems::new().use_full_paths()).on_submit(handler))
         .child(DummyView);
 
     c.add_layer(Dialog::around(layout).full_width());
