@@ -90,7 +90,10 @@ impl FormField for Field<MultiselectManager, Vec<String>> {
                 }
             }
         }
-        let vec_str = items.iter().map(|x| Value::String(x.to_string())).collect::<Vec<Value>>();
+        let vec_str = items
+            .iter()
+            .map(|x| Value::String(x.to_string()))
+            .collect::<Vec<Value>>();
         let val_of_vec = Value::Array(vec_str);
         Ok(val_of_vec)
     }

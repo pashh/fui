@@ -1,7 +1,7 @@
-//use std::str::FromStr;
 use cursive::view::AnyView;
 use cursive::views;
 use serde_json::value::Value;
+use std::rc::Rc;
 use validators::Validator;
 
 mod autocomplete;
@@ -23,11 +23,12 @@ pub trait WidgetManager {
 }
 
 /// Building block for `Form`s which stores data & `Widget`
+#[derive(Clone)]
 pub struct Field<W: WidgetManager, T> {
     label: String,
     help: String,
     initial: T,
-    validators: Vec<Box<Validator>>,
+    validators: Vec<Rc<Validator>>,
     widget_manager: W,
 }
 
@@ -46,7 +47,7 @@ impl<W: WidgetManager, T> Field<W, T> {
         self
     }
     pub fn validator<V: Validator + 'static>(mut self, validator: V) -> Self {
-        self.validators.push(Box::new(validator));
+        self.validators.push(Rc::new(validator));
         self
     }
 }
