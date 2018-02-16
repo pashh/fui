@@ -95,6 +95,24 @@ impl Multiselect {
         selected_text
     }
 
+    ///Returns vec with selected items
+    pub fn get_selected_items(&self) -> Vec<&String> {
+        let select = self.get_selected_view();
+        let mut idx = 0;
+        let mut found = Vec::new();
+        while let Some((_, v)) = select.get_item(idx) {
+            found.push(v);
+            idx += 1;
+        }
+        found
+    }
+
+    ///Makes `items` selected
+    pub fn select_items(&mut self, items: Vec<String>) {
+        let selected_view = self.get_selected_view_mut();
+        selected_view.add_all_str(items);
+    }
+
     /// Checks if value is already selected
     pub fn is_value_selected(&self, to_check: &str) -> bool {
         let select = self.get_selected_view();

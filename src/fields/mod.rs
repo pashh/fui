@@ -2,16 +2,59 @@
 use cursive::view::AnyView;
 use cursive::views;
 use serde_json::value::Value;
+use validators::Validator;
 
 mod autocomplete;
 mod checkbox;
+mod multiselect;
 mod text;
 
 pub use self::autocomplete::Autocomplete;
 pub use self::checkbox::Checkbox;
+pub use self::multiselect::Multiselect;
 pub use self::text::Text;
 
+/// Covers communication between from `Field` to `Widget`
+pub trait WidgetManager {
+    fn full_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView>;
+    fn get_value(&self, view: &AnyView) -> String;
+    fn set_error(&self, _view: &mut AnyView, error: &str);
+    fn widget_factory(&self, value: &str) -> Box<AnyView>;
+}
+
+/// Building block for `Form`s which stores data & `Widget`
+pub struct Field<W: WidgetManager, T> {
+    label: String,
+    help: String,
+    initial: T,
+    validators: Vec<Box<Validator>>,
+    widget_manager: W,
+}
+
+impl<W: WidgetManager, T> Field<W, T> {
+    pub fn new<IS: Into<String>>(label: IS, widget_manager: W, initial: T) -> Self {
+        Field {
+            label: label.into(),
+            help: "".into(),
+            initial: initial,
+            validators: vec![],
+            widget_manager: widget_manager,
+        }
+    }
+    pub fn help<IS: Into<String>>(mut self, msg: IS) -> Self {
+        self.help = msg.into();
+        self
+    }
+    pub fn validator<V: Validator + 'static>(mut self, validator: V) -> Self {
+        self.validators.push(Box::new(validator));
+        self
+    }
+}
+
+/// Trait will be completely changed when all fields are migrated to Field and FormField will be
+/// removed
 pub trait FormField {
+    //TODO:: get_widget_manager()?
     /// Gets widget representing this field
     fn get_widget(&self) -> Box<AnyView>;
     /// Gets value from widget
