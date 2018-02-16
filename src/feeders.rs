@@ -129,12 +129,17 @@ mod tests {
         let found = {
             if let Ok(v) = fs::read_dir(start) {
                 v.filter(|x| {
-                    !x.as_ref().unwrap().file_name().to_str().unwrap().starts_with(".")
-                })
-                .map(|x| {
-                    let p = format!("{}", x.as_ref().unwrap().path().display());
-                    p.replace("./", "")
-                }).collect()
+                    !x.as_ref()
+                        .unwrap()
+                        .file_name()
+                        .to_str()
+                        .unwrap()
+                        .starts_with(".")
+                }).map(|x| {
+                        let p = format!("{}", x.as_ref().unwrap().path().display());
+                        p.replace("./", "")
+                    })
+                    .collect()
             } else {
                 Vec::new()
             }
