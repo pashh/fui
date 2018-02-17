@@ -6,7 +6,7 @@
 extern crate fui;
 
 use fui::feeders::DirItems;
-use fui::fields::Autocomplete;
+use fui::fields::{Autocomplete, Multiselect};
 use fui::form::FormView;
 use fui::utils::cwd;
 use fui::validators::{FileExists, OneOf, PathFree, Required};
@@ -29,9 +29,8 @@ fn main() {
             "ARCHIVE-FILES: Create an archive from files",
             FormView::new()
                 .field(
-                    Autocomplete::new("file-to-archive", DirItems::new())
+                    Multiselect::new("file-to-archive", DirItems::new())
                         .help("Files which should be archived")
-                        //TODO: .multi(true)
                         .validator(Required)
                         .validator(FileExists),
                 )
