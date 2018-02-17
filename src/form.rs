@@ -29,8 +29,7 @@ impl FormView {
     }
 
     pub fn field<V: FormField + 'static>(mut self, field: V) -> Self {
-        //let field_label = field.get_label().to_owned();
-        let widget = field.get_widget();
+        let widget = field.build_widget();
         self.view.add_child(widget);
         self.fields.push(Box::new(field));
         self
@@ -54,7 +53,7 @@ impl FormView {
 
         for (idx, field) in self.fields.iter().enumerate() {
             let view = self.view.get_child(idx).unwrap();
-            let value = field.get_widget_value(view);
+            let value = field.get_widget_manager().get_value(view);
             let label = field.get_label();
             match field.validate(value.as_ref()) {
                 Ok(v) => {
@@ -87,7 +86,7 @@ impl FormView {
                     let label = field.get_label();
                     let view = self.view.get_child_mut(idx).unwrap();
                     let e = errors.get(label).map(|x| x.as_ref()).unwrap_or("");
-                    field.set_widget_error(view, e);
+                    field.get_widget_manager().set_error(view, e);
                 }
                 EventResult::Consumed(None)
             }

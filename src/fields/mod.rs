@@ -16,10 +16,14 @@ pub use self::text::Text;
 
 /// Covers communication between from `Field` to `Widget`
 pub trait WidgetManager {
-    fn full_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView>;
+    /// Builds full widget with placeholders for help, value, error
+    fn build_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView>;
+    /// Gets value from widget
     fn get_value(&self, view: &AnyView) -> String;
+    /// Sets error on widget
     fn set_error(&self, _view: &mut AnyView, error: &str);
-    fn widget_factory(&self, value: &str) -> Box<AnyView>;
+    /// Builds view which stores value (in widget)
+    fn build_value_view(&self, value: &str) -> Box<AnyView>;
 }
 
 /// Building block for `Form`s which stores data & `Widget`
@@ -52,24 +56,15 @@ impl<W: WidgetManager, T> Field<W, T> {
     }
 }
 
-/// Trait will be completely changed when all fields are migrated to Field and FormField will be
-/// removed
 pub trait FormField {
-    //TODO:: get_widget_manager()?
-    /// Gets widget representing this field
-    fn get_widget(&self) -> Box<AnyView>;
-    /// Gets value from widget
-    fn get_widget_value(&self, view: &AnyView) -> String;
-    /// Validates data
-    //TODO: make data String
+    /// Builds widget representing this field
+    fn build_widget(&self) -> Box<AnyView>;
+    /// Validates field data
     fn validate(&self, data: &str) -> Result<Value, String>;
-    /// Gets label of the field
+    /// Gets label of this field
     fn get_label(&self) -> &str;
-    /// Sets error field's error
-    fn set_widget_error(&self, _view: &mut AnyView, error: &str);
-    // TODO: this should include these, but Self return fails
-    // pub fn initial(mut self, value: bool) -> Self;
-    // pub fn help<IS: Into<String>>(mut self, text: IS) -> Self;
+    /// Gets manager which controlls widget
+    fn get_widget_manager(&self) -> &WidgetManager;
 }
 
 fn format_annotation(label: &str, help: &str) -> String {

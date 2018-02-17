@@ -19,8 +19,8 @@ impl Checkbox {
 pub struct CheckboxManager;
 
 impl fields::WidgetManager for CheckboxManager {
-    fn full_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView> {
-        let checkbox = self.widget_factory(&initial);
+    fn build_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView> {
+        let checkbox = self.build_value_view(&initial);
         fields::label_with_help_layout(checkbox, &label, &help)
     }
     fn get_value(&self, view: &AnyView) -> String {
@@ -45,7 +45,7 @@ impl fields::WidgetManager for CheckboxManager {
     fn set_error(&self, _view: &mut AnyView, _error: &str) {
         // no operation, checkbox is always valid
     }
-    fn widget_factory(&self, value: &str) -> Box<AnyView> {
+    fn build_value_view(&self, value: &str) -> Box<AnyView> {
         let value = FromStr::from_str(value).unwrap();
         let mut checkbox = views::Checkbox::new();
         checkbox.set_checked(value);
@@ -54,19 +54,16 @@ impl fields::WidgetManager for CheckboxManager {
 }
 
 impl fields::FormField for fields::Field<CheckboxManager, bool> {
-    fn get_widget(&self) -> Box<AnyView> {
+    fn get_widget_manager(&self) -> &WidgetManager {
+        &self.widget_manager
+    }
+    fn build_widget(&self) -> Box<AnyView> {
         let initial = format!("{}", self.initial);
         self.widget_manager
-            .full_widget(&self.label, &self.help, &initial)
+            .build_widget(&self.label, &self.help, &initial)
     }
     fn get_label(&self) -> &str {
         &self.label
-    }
-    fn get_widget_value(&self, view: &AnyView) -> String {
-        self.widget_manager.get_value(view)
-    }
-    fn set_widget_error(&self, _view: &mut AnyView, _error: &str) {
-        // no operation, checkbox is always valid
     }
     fn validate(&self, data: &str) -> Result<Value, String> {
         let value = FromStr::from_str(data)

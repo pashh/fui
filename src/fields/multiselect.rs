@@ -30,7 +30,7 @@ pub struct MultiselectManager {
 }
 
 impl WidgetManager for MultiselectManager {
-    fn widget_factory(&self, initial: &str) -> Box<AnyView> {
+    fn build_value_view(&self, initial: &str) -> Box<AnyView> {
         let mut widget = views::Multiselect::new(Rc::clone(&self.feeder));
         if initial.trim() != "" {
             let items = initial
@@ -41,8 +41,8 @@ impl WidgetManager for MultiselectManager {
         }
         Box::new(widget)
     }
-    fn full_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView> {
-        let view = self.widget_factory(initial);
+    fn build_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView> {
+        let view = self.build_value_view(initial);
         label_with_help_layout(view, label, help)
     }
     fn get_value(&self, view: &AnyView) -> String {
@@ -84,10 +84,11 @@ impl WidgetManager for MultiselectManager {
     }
 }
 
-// TODO:: tmp until all fields are migrated to Field and FormField will be removed
 impl FormField for Field<MultiselectManager, Vec<String>> {
+    fn get_widget_manager(&self) -> &WidgetManager {
+        &self.widget_manager
+    }
     fn validate(&self, data: &str) -> Result<Value, String> {
-        // TODO:: should comes from Field impl. when all fields get migrated
         let items = data.split(",").collect::<Vec<&str>>();
         for item in items.iter() {
             for v in &self.validators {
@@ -104,23 +105,12 @@ impl FormField for Field<MultiselectManager, Vec<String>> {
         Ok(val_of_vec)
     }
     fn get_label(&self) -> &str {
-        // TODO:: should be defined in "impl Field" when all fields are migrated
         &self.label
     }
-    // TODO:: rm after migration
-    fn get_widget(&self) -> Box<AnyView> {
+    fn build_widget(&self) -> Box<AnyView> {
         let initial = self.initial.join(",");
         self.widget_manager
-            .full_widget(&self.label, &self.help, &initial)
-    }
-    // TODO:: rm after migration
-    fn get_widget_value(&self, view: &AnyView) -> String {
-        let value = self.widget_manager.get_value(view);
-        value
-    }
-    // TODO:: rm after migration
-    fn set_widget_error(&self, view: &mut AnyView, error: &str) {
-        self.widget_manager.set_error(view, error);
+            .build_widget(&self.label, &self.help, &initial)
     }
 }
 
