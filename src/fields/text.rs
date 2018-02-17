@@ -17,8 +17,8 @@ impl Text {
 pub struct TextManager;
 
 impl WidgetManager for TextManager {
-    fn full_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView> {
-        let view = self.widget_factory(initial);
+    fn build_widget(&self, label: &str, help: &str, initial: &str) -> Box<AnyView> {
+        let view = self.build_value_view(initial);
         fields::label_with_help_layout(view, label, help)
     }
     fn get_value(&self, view: &AnyView) -> String {
@@ -55,19 +55,18 @@ impl WidgetManager for TextManager {
             .unwrap();
         text.set_content(error);
     }
-    fn widget_factory(&self, value: &str) -> Box<AnyView> {
+    fn build_value_view(&self, value: &str) -> Box<AnyView> {
         Box::new(views::EditView::new().content(value))
     }
 }
 
 impl fields::FormField for fields::Field<TextManager, String> {
-    fn get_widget(&self) -> Box<AnyView> {
-        self.widget_manager
-            .full_widget(&self.label, &self.help, &self.initial)
+    fn get_widget_manager(&self) -> &WidgetManager {
+        &self.widget_manager
     }
-
-    fn get_widget_value(&self, view: &AnyView) -> String {
-        self.widget_manager.get_value(view)
+    fn build_widget(&self) -> Box<AnyView> {
+        self.widget_manager
+            .build_widget(&self.label, &self.help, &self.initial)
     }
 
     fn validate(&self, data: &str) -> Result<Value, String> {
@@ -82,11 +81,6 @@ impl fields::FormField for fields::Field<TextManager, String> {
     /// Gets label of the field
     fn get_label(&self) -> &str {
         &self.label
-    }
-
-    /// Sets error field's error
-    fn set_widget_error(&self, view: &mut AnyView, error: &str) {
-        self.widget_manager.set_error(view, error)
     }
 }
 
