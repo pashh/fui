@@ -6,8 +6,9 @@
 extern crate fui;
 
 use fui::feeders::DirItems;
-use fui::fields::{Autocomplete, Checkbox, Text};
+use fui::fields::{Autocomplete, Checkbox, Multiselect};
 use fui::form::FormView;
+use fui::utils;
 use fui::validators::{DirExists, Required};
 use fui::{Fui, Value};
 
@@ -16,19 +17,19 @@ fn hdlr(v: Value) {
 }
 
 fn main() {
-    let target = Autocomplete::new("TARGET", DirItems::new())
-        .help("Target of link")
-        .validator(Required);
     let make_symbolic =
         Checkbox::new("make_symbolic").help("make symbolic links instead of hard links");
     Fui::new()
         .action(
             "BASIC LINK: create a link to TARGET with the name LINK_NAME",
             FormView::new()
-                .field(target.clone())
                 .field(
-                    // TODO: Autocomplete(DirItems::new())
-                    Text::new("LINK_NAME")
+                    Autocomplete::new("TARGET", DirItems::new())
+                        .help("Target of link")
+                        .validator(Required),
+                )
+                .field(
+                    Autocomplete::new("LINK_NAME", DirItems::new())
                         .help("Destiny of link")
                         .validator(Required),
                 )
@@ -38,10 +39,15 @@ fn main() {
         .action(
             "MANY FILES, SINGLE DIR: create links to each TARGET in DIRECTORY",
             FormView::new()
-                .field(target)
                 .field(
-                    Autocomplete::new("DIRECTORY", DirItems::new())
+                    Multiselect::new("TARGET", DirItems::new())
+                        .help("Target of link")
+                        .validator(Required),
+                )
+                .field(
+                    Autocomplete::new("DIRECTORY", DirItems::dirs())
                         .help("Directory where all links should be stored")
+                        .initial(utils::cwd())
                         .validator(Required)
                         .validator(DirExists),
                 )
