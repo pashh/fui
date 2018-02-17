@@ -16,19 +16,14 @@ fn hdlr(v: Value) {
     println!("user input (from hdlr) {:?}", v);
 }
 
-fn compression_format() -> Autocomplete {
-    // cloning Autocomplete is not implemented yet, so we're using clone_target for that
-    // perhaps instead of cloning, simple reference would be enough but this needs research and
-    // implementation, so stay tuned
+fn main() {
     let formats = vec!["none", "gzip", "bzip2"];
-    Autocomplete::new("file_to_archive", formats.clone())
+    let compression = Autocomplete::new("file_to_archive", formats.clone())
         .initial("gzip")
         .validator(Required)
         .validator(OneOf(formats))
-        .help("Archive format")
-}
+        .help("Archive format");
 
-fn main() {
     Fui::new()
         .action(
             "ARCHIVE-FILES: Create an archive from files",
@@ -46,7 +41,7 @@ fn main() {
                         // TODO: PathFree?
                         .validator(Required),
                 )
-                .field(compression_format()),
+                .field(compression.clone()),
             hdlr,
         )
         .action(
@@ -64,7 +59,7 @@ fn main() {
                         .help("Dir where extracted files should land")
                         .validator(Required),
                 )
-                .field(compression_format()),
+                .field(compression.clone()),
             hdlr,
         )
         .action(
@@ -75,7 +70,7 @@ fn main() {
                         .help("Path to archive")
                         .validator(FileExists),
                 )
-                .field(compression_format()),
+                .field(compression),
             hdlr,
         )
         .run();

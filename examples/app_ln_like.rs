@@ -5,34 +5,27 @@
 
 extern crate fui;
 
-use fui::{Fui, Value};
 use fui::feeders::DirItems;
-use fui::form::FormView;
 use fui::fields::{Autocomplete, Checkbox, Text};
+use fui::form::FormView;
 use fui::validators::{DirExists, Required};
+use fui::{Fui, Value};
 
 fn hdlr(v: Value) {
     println!("user input (from hdlr) {:?}", v);
 }
 
-fn clone_target() -> Autocomplete {
-    // cloning Autocomplete is not implemented yet, so we're using clone_target for that
-    // perhaps instead of cloning, simple reference would be enough but this needs research and
-    // implementation, so stay tuned
-    Autocomplete::new("TARGET", DirItems::new())
-        .help("Target of link")
-        .validator(Required)
-    //TODO: .multi(true)
-}
-
 fn main() {
+    let target = Autocomplete::new("TARGET", DirItems::new())
+        .help("Target of link")
+        .validator(Required);
     let make_symbolic =
         Checkbox::new("make_symbolic").help("make symbolic links instead of hard links");
     Fui::new()
         .action(
             "BASIC LINK: create a link to TARGET with the name LINK_NAME",
             FormView::new()
-                .field(clone_target())
+                .field(target.clone())
                 .field(
                     // TODO: Autocomplete(DirItems::new())
                     Text::new("LINK_NAME")
@@ -45,7 +38,7 @@ fn main() {
         .action(
             "MANY FILES, SINGLE DIR: create links to each TARGET in DIRECTORY",
             FormView::new()
-                .field(clone_target())
+                .field(target)
                 .field(
                     Autocomplete::new("DIRECTORY", DirItems::new())
                         .help("Directory where all links should be stored")

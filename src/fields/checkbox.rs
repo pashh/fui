@@ -7,6 +7,14 @@ use serde_json::value::Value;
 use fields;
 use fields::WidgetManager;
 
+pub struct Checkbox;
+
+impl Checkbox {
+    pub fn new<IS: Into<String>>(label: IS) -> fields::Field<CheckboxManager, bool> {
+        fields::Field::new(label, CheckboxManager, false)
+    }
+}
+
 #[derive(Clone)]
 pub struct CheckboxManager;
 
@@ -45,21 +53,6 @@ impl fields::WidgetManager for CheckboxManager {
     }
 }
 
-pub struct Checkbox;
-
-impl Checkbox {
-    pub fn new<IS: Into<String>>(label: IS) -> fields::Field<CheckboxManager, bool> {
-        fields::Field::new(label, CheckboxManager, false)
-    }
-}
-
-impl<W: WidgetManager> fields::Field<W, bool> {
-    pub fn initial(mut self, value: bool) -> Self {
-        self.initial = value;
-        self
-    }
-}
-
 impl fields::FormField for fields::Field<CheckboxManager, bool> {
     fn get_widget(&self) -> Box<AnyView> {
         let initial = format!("{}", self.initial);
@@ -80,5 +73,12 @@ impl fields::FormField for fields::Field<CheckboxManager, bool> {
             .map(|v| Value::Bool(v))
             .map_err(|_| "Value can't be converterd to bool".to_string());
         value
+    }
+}
+
+impl<W: WidgetManager> fields::Field<W, bool> {
+    pub fn initial(mut self, value: bool) -> Self {
+        self.initial = value;
+        self
     }
 }

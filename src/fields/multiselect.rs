@@ -9,16 +9,22 @@ use feeders::Feeder;
 use fields::{label_with_help_layout, Field, FormField, WidgetManager};
 use views;
 
-impl<W: WidgetManager> Field<W, Vec<String>> {
-    pub fn initial<U: Deref<Target = str>>(mut self, initial: Vec<U>) -> Self {
-        self.initial = initial
-            .iter()
-            .map(|x| (*x).to_string())
-            .collect::<Vec<String>>();
-        self
+/// Convienient wrapper around Field<MultiselectManager, Vec<String>>
+pub struct Multiselect;
+
+impl Multiselect {
+    pub fn new<IS: Into<String>, F: Feeder>(
+        label: IS,
+        feeder: F,
+    ) -> Field<MultiselectManager, Vec<String>> {
+        let mngr = MultiselectManager {
+            feeder: Rc::new(feeder),
+        };
+        Field::new(label, mngr, Vec::new())
     }
 }
 
+#[derive(Clone)]
 pub struct MultiselectManager {
     feeder: Rc<Feeder>,
 }
@@ -118,17 +124,12 @@ impl FormField for Field<MultiselectManager, Vec<String>> {
     }
 }
 
-/// Convienient wrapper around Field<MultiselectManager, Vec<String>>
-pub struct Multiselect;
-
-impl Multiselect {
-    pub fn new<IS: Into<String>, F: Feeder>(
-        label: IS,
-        feeder: F,
-    ) -> Field<MultiselectManager, Vec<String>> {
-        let mngr = MultiselectManager {
-            feeder: Rc::new(feeder),
-        };
-        Field::new(label, mngr, Vec::new())
+impl<W: WidgetManager> Field<W, Vec<String>> {
+    pub fn initial<U: Deref<Target = str>>(mut self, initial: Vec<U>) -> Self {
+        self.initial = initial
+            .iter()
+            .map(|x| (*x).to_string())
+            .collect::<Vec<String>>();
+        self
     }
 }
