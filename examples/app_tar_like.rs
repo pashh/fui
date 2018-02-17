@@ -6,10 +6,10 @@
 extern crate fui;
 
 use fui::feeders::DirItems;
-use fui::fields::{Autocomplete, Text};
+use fui::fields::Autocomplete;
 use fui::form::FormView;
 use fui::utils::cwd;
-use fui::validators::{FileExists, OneOf, Required};
+use fui::validators::{FileExists, OneOf, PathFree, Required};
 use fui::{Fui, Value};
 
 fn hdlr(v: Value) {
@@ -36,10 +36,10 @@ fn main() {
                         .validator(FileExists),
                 )
                 .field(
-                    Text::new("target")
+                    Autocomplete::new("target", DirItems::dirs())
                         .help("Name of archive file")
-                        // TODO: PathFree?
-                        .validator(Required),
+                        .validator(Required)
+                        .validator(PathFree),
                 )
                 .field(compression.clone()),
             hdlr,
