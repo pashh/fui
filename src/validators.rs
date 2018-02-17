@@ -30,6 +30,44 @@ impl Validator for Required {
     }
 }
 
+
+/// Ensure path is free
+///
+/// Examples
+///
+/// ```
+/// extern crate fui;
+/// extern crate tempdir;
+///
+/// use fui::validators::PathFree;
+/// use fui::validators::Validator;
+/// use std::fs::File;
+/// use tempdir::TempDir;
+///
+/// # fn main() {
+/// let temp_dir = TempDir::new("fui").unwrap();
+/// let file_path = temp_dir.path().join("some-file");
+///
+/// assert_eq!(PathFree.validate(file_path.as_path().to_str().unwrap()), None);
+/// File::create(&file_path.as_path()).unwrap();
+/// assert_eq!(PathFree.validate(file_path.as_path().to_str().unwrap()), Some("Path is already used".to_string()));
+/// # }
+///
+/// ```
+#[derive(Clone, Debug)]
+pub struct PathFree;
+
+impl Validator for PathFree {
+    fn validate(&self, data: &str) -> Option<String> {
+        let path = Path::new(data);
+        if path.exists() {
+            Some("Path is already used".to_string())
+        } else {
+            None
+        }
+    }
+}
+
 /// Ensure data is dir path which exists
 ///
 /// Examples
