@@ -13,6 +13,7 @@ impl Text {
     }
 }
 
+#[derive(Clone)]
 pub struct TextManager;
 
 impl WidgetManager for TextManager {
