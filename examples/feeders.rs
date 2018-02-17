@@ -1,4 +1,4 @@
-// Usage example of data providers
+// Usage example of feeders
 extern crate cursive;
 extern crate fui;
 
