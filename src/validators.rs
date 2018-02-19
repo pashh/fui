@@ -30,7 +30,6 @@ impl Validator for Required {
     }
 }
 
-
 /// Ensure path is free
 ///
 /// Examples

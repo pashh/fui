@@ -21,12 +21,22 @@ Paritally copied interfaces of real world programs: `ln` and `tar`
 * [`app_tar_like`](app_tar_like.rs) parital copy of `tar`
 
 
+## Form example
+
+`Form` is container for `Fields`. `Form` also includes two events:
+
+* on_submit
+* on_cancel
+
+These examples show more details about `Form` and available `Fields`.
+
+* [`form`](form.rs) shows `Form` with available `Fields`
+
 ## Field examples
 
 `Fields` stores user input. `Fields` are building blocks for `Forms`.
 These examples show more details about `Fields`.
 
-* [`fields_showcase`](fields_showcase.rs) shows all available `Fields` on a single `Form`
 * [`field_checkbox`](field_checkbox.rs) covers switches like `--debug`,  `--verbose`, etc.
 * [`field_text`](field_text.rs) covers free text like inputs
 * [`field_autocomplete`](field_autocomplete.rs) covers single input which require assistance, like paths, selections, etc.

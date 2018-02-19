@@ -11,8 +11,8 @@ use serde_json::value::Value;
 use fui::form::FormView;
 use fui::fields::{Autocomplete, Checkbox, Multiselect, Text};
 
-fn show_data(c: &mut Cursive, data: Value) {
-    let text = format!("Got data: {:?}", data);
+fn submit_handler(c: &mut Cursive, data: Value) {
+    let text = format!("submit data: {:?}", data);
     c.add_layer(Dialog::info(text));
 }
 
@@ -21,7 +21,7 @@ fn main() {
 
     let options = vec!["op1", "op2", "op3"];
 
-    let widget = FormView::new()
+    let form = FormView::new()
         .field(Checkbox::new("verbose").help("this is help for checkbox"))
         .field(Text::new("text-field").help("this is help for text"))
         .field(
@@ -32,9 +32,10 @@ fn main() {
             Multiselect::new("multiselect-field", options.clone())
                 .help("this is help for multiselect"),
         )
-        .on_submit(show_data);
+        .on_submit(submit_handler)
+        .on_cancel(|c| c.quit());
 
-    siv.add_layer(Dialog::around(widget).full_screen());
+    siv.add_layer(form.full_screen());
 
     siv.run();
 }
