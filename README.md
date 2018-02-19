@@ -16,6 +16,7 @@ Add form interface for your CLI program.
 * create wrapper DirField
 * ctrl+enter submits ([#151](https://github.com/gyscos/Cursive/issues/151))?
 * checkbox: automatic toggle on char
+* add Field.data & form on_submit returns it?
 * optimalizations
     * feeders use iterators
     * thread
