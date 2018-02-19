@@ -19,15 +19,12 @@ pub mod utils;
 pub mod validators;
 pub mod views;
 
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::sync::mpsc::channel;
-
 use cursive::Cursive;
 use cursive::traits::Boxable;
-use cursive::views::Dialog;
-
 use form::FormView;
+use std::cell::RefCell;
+use std::rc::Rc;
+use validators::OneOf;
 
 pub struct Fui {
     descs: Vec<String>,
@@ -54,42 +51,40 @@ impl Fui {
     }
     pub fn run(mut self) {
         let (form_data, selected_idx) = {
-            // cursive instance breaks println!, enclose it in scope to fix a println!
+            // cursive instance breaks println!, enclose it with scope to fix printing
             let mut c = cursive::Cursive::new();
-            //TODO: should be seperate view (CmdPicker + FormView)?
 
             // cmd picker
-            //TODO: replace mspc with rc for cmd_picker & form (this fn)
-            let (picker_sender, picker_receiver) = channel();
-            let picker_on_submit = picker_sender.clone();
-            let picker_on_cancel = picker_sender.clone();
-            let cmd_picker = views::Autocomplete::new(self.descs.clone()).on_submit(
-                move |c: &mut Cursive, text: Rc<String>| {
-                    picker_on_submit.send(Some(text)).unwrap();
-                    c.quit();
-                },
-            );
-            c.add_fullscreen_layer(
-                Dialog::around(cmd_picker)
-                    .button("Cancel", move |c| {
-                        picker_on_cancel.send(None).unwrap();
-                        c.quit()
+            let mut cmd: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
+            let cmd_clone = Rc::clone(&cmd);
+            c.add_layer(
+                FormView::new()
+                    .field(
+                        fields::Autocomplete::new("action", self.descs.clone())
+                            .help("Pick action")
+                            .validator(OneOf(self.descs.clone())),
+                    )
+                    .on_submit(move |c, data| {
+                        let value = data.get("action").unwrap().clone();
+                        *cmd_clone.borrow_mut() = Some(value.as_str().unwrap().to_string());
+                        c.quit();
                     })
+                    .on_cancel(|c| c.quit())
                     .full_screen(),
             );
             c.run();
-            let selected_idx = picker_receiver
-                .recv()
-                .unwrap()
-                .and_then(|selected| self.descs.iter().position(|item| item == &**selected));
-            if selected_idx.is_none() {
-                return;
-            }
+            let selected_idx = cmd.borrow()
+                .clone()
+                .and_then(|v| self.descs.iter().position(|item| item == v.as_str()));
+            let selected_idx = match selected_idx {
+                None => return,
+                Some(idx) => idx,
+            };
 
             // form
+            let mut form_view = self.forms.remove(selected_idx);
             let mut form_data: Rc<RefCell<Option<Value>>> = Rc::new(RefCell::new(None));
             let mut form_data_submit = Rc::clone(&form_data);
-            let mut form_view = self.forms.remove(selected_idx.unwrap());
             form_view.set_on_submit(move |c: &mut Cursive, data: Value| {
                 *form_data_submit.borrow_mut() = Some(data);
                 c.quit();
@@ -101,7 +96,7 @@ impl Fui {
             });
             c.add_layer(form_view.full_width());
             c.run();
-            (form_data, selected_idx.unwrap())
+            (form_data, selected_idx)
         };
 
         // run handler
