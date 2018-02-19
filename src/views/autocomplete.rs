@@ -10,7 +10,7 @@ use cursive::views::{EditView, LinearLayout, SelectView};
 use feeders::Feeder;
 use super::is_value_from_select;
 
-// TODO: selecting should auto load next/prev items
+// TODO:: selecting should auto load next/prev items
 // TODO: better performance while typing
 
 pub type OnSubmit = Option<Rc<Fn(&mut Cursive, Rc<String>)>>;

@@ -2,44 +2,57 @@ use std::rc::Rc;
 use std::collections::HashMap;
 
 use cursive::Cursive;
-use cursive::event::{Callback, Event, EventResult};
+use cursive::event::{Callback, Event, EventResult, Key, MouseButton, MouseEvent};
 use cursive::view::{View, ViewWrapper};
-use cursive::views::LinearLayout;
+use cursive::views::{Dialog, DialogFocus, LinearLayout};
 use serde_json::map::Map;
 use serde_json::value::Value;
 
 use fields::FormField;
 
 type OnSubmit = Option<Rc<Fn(&mut Cursive, Value)>>;
+type OnCancel = Option<Rc<Fn(&mut Cursive)>>;
 
 pub struct FormView {
-    view: LinearLayout,
+    view: Dialog,
 
     fields: Vec<Box<FormField>>,
     on_submit: OnSubmit,
+    on_cancel: OnCancel,
 }
 impl FormView {
     pub fn new() -> Self {
-        //TODO: add buttons submit, cancel
+        let layout = Dialog::new()
+            .content(LinearLayout::vertical())
+            .button("Cancel", |_| {})
+            .button("Submit (Ctrl+f)", |_| {});
         FormView {
-            view: LinearLayout::vertical(),
+            view: layout,
             fields: Vec::new(),
             on_submit: None,
+            on_cancel: None,
         }
     }
 
     pub fn field<V: FormField + 'static>(mut self, field: V) -> Self {
         let widget = field.build_widget();
-        self.view.add_child(widget);
+        self.view
+            .get_content_mut()
+            .as_any_mut()
+            .downcast_mut::<LinearLayout>()
+            .unwrap()
+            .add_child(widget);
         self.fields.push(Box::new(field));
         self
     }
+
     pub fn set_on_submit<F>(&mut self, callback: F)
     where
         F: Fn(&mut Cursive, Value) + 'static,
     {
         self.on_submit = Some(Rc::new(callback));
     }
+
     pub fn on_submit<F>(mut self, callback: F) -> Self
     where
         F: Fn(&mut Cursive, Value) + 'static,
@@ -47,12 +60,34 @@ impl FormView {
         self.set_on_submit(callback);
         self
     }
+
+    pub fn set_on_cancel<F>(&mut self, callback: F)
+    where
+        F: Fn(&mut Cursive) + 'static,
+    {
+        self.on_cancel = Some(Rc::new(callback));
+    }
+
+    pub fn on_cancel<F>(mut self, callback: F) -> Self
+    where
+        F: Fn(&mut Cursive) + 'static,
+    {
+        self.set_on_cancel(callback);
+        self
+    }
+
     fn validate(&self) -> Result<Value, HashMap<String, String>> {
         let mut data = Map::with_capacity(self.fields.len());
         let mut errors = HashMap::with_capacity(self.fields.len());
 
         for (idx, field) in self.fields.iter().enumerate() {
-            let view = self.view.get_child(idx).unwrap();
+            let view = self.view
+                .get_content()
+                .as_any()
+                .downcast_ref::<LinearLayout>()
+                .unwrap()
+                .get_child(idx)
+                .unwrap();
             let value = field.get_widget_manager().get_value(view);
             let label = field.get_label();
             match field.validate(value.as_ref()) {
@@ -72,7 +107,7 @@ impl FormView {
         }
     }
 
-    pub fn submit(&mut self) -> EventResult {
+    fn event_submit(&mut self) -> EventResult {
         match self.validate() {
             Ok(data_map) => {
                 let opt_cb = self.on_submit
@@ -84,22 +119,67 @@ impl FormView {
                 // TODO: the event focus next required/invalid field?
                 for (idx, field) in self.fields.iter().enumerate() {
                     let label = field.get_label();
-                    let view = self.view.get_child_mut(idx).unwrap();
                     let e = errors.get(label).map(|x| x.as_ref()).unwrap_or("");
+                    // can't call method which returns suitable view because of ownership
+                    //  * such method would get &mut self
+                    //  * self.field gets &self
+                    //  so this clash of &mut and &, illegal
+                    //  possible solution is to use clone on WidgetManager (needs implementation)
+                    //  or
+                    //  form should only call field.validate and rest would be handled by field
+                    //  which should solve this issue?
+                    let mut view = self.view
+                        .get_content_mut()
+                        .as_any_mut()
+                        .downcast_mut::<LinearLayout>()
+                        .unwrap()
+                        .get_child_mut(idx)
+                        .unwrap();
                     field.get_widget_manager().set_error(view, e);
                 }
                 EventResult::Consumed(None)
             }
         }
     }
+
+    fn event_cancel(&mut self) -> EventResult {
+        let cb = self.on_cancel
+            .clone()
+            .map(|cb| Callback::from_fn(move |c| cb(c)));
+        EventResult::Consumed(cb)
+    }
 }
+
 impl ViewWrapper for FormView {
-    wrap_impl!(self.view: LinearLayout);
+    wrap_impl!(self.view: Dialog);
 
     fn wrap_on_event(&mut self, event: Event) -> EventResult {
         match event {
+            Event::Mouse {
+                offset,
+                position,
+                event: MouseEvent::Press(btn),
+            } => {
+                if btn == MouseButton::Left {
+                    self.with_view_mut(|v| v.on_event(event))
+                        .unwrap_or(EventResult::Ignored);
+                    match self.view.focus() {
+                        DialogFocus::Button(0) => self.event_cancel(),
+                        DialogFocus::Button(1) => self.event_submit(),
+                        _ => EventResult::Ignored,
+                    }
+                } else {
+                    EventResult::Ignored
+                }
+            }
+            Event::Key(Key::Enter) => match self.view.focus() {
+                DialogFocus::Button(0) => self.event_cancel(),
+                DialogFocus::Button(1) => self.event_submit(),
+                _ => self.with_view_mut(|v| v.on_event(event))
+                    .unwrap_or(EventResult::Ignored),
+            },
             // TODO: ctlr+enter binding?
-            Event::CtrlChar('f') => self.submit(),
+            Event::CtrlChar('f') => self.event_submit(),
             _ => {
                 // default behaviour from ViewWrapper
                 self.with_view_mut(|v| v.on_event(event))
