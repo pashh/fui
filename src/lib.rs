@@ -5,7 +5,6 @@ extern crate regex;
 extern crate serde_json;
 #[cfg(test)]
 extern crate tempdir;
-extern crate walkdir;
 
 // Re-export of cursive
 pub mod cursive {
