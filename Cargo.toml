@@ -7,7 +7,6 @@ authors = ["xliiv <tymoteusz.jankowski@gmail.com>"]
 glob = "0.2"
 regex = "0.2"
 serde_json = "1.0"
-walkdir = "2"
 
 [dependencies.cursive]
 #version = "0.8"

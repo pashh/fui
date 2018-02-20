@@ -11,6 +11,7 @@ pub fn cwd() -> String {
 }
 
 /// Returns home-dir path
+//TODO: -> String
 pub fn home_dir() -> Option<String> {
     env::home_dir().map(|p| p.into_os_string().into_string().unwrap())
 }
