@@ -45,13 +45,40 @@
 //!         .run();
 //! }
 //! ```
+//! <div>
+//! <details> <summary>Click me to see screen</summary>
+//! <a href="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_basic.png">
+//! <img src="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_basic.png" alt="app_basic.rs example", width="100%" />
+//! </a>
+//! </details>
+//! </div>
+//!
+//! ### More examples
 //!
 //! <div>
-//! <a href="https://github.com/xliiv/fui/blob/master/examples/app_basic.rs"><img src="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_basic.png" alt="app_basic.rs example", width="48%" /></a>
-//! <a href="https://github.com/xliiv/fui/blob/master/examples/app_ln_like.rs"><img src="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_ln_like.png" alt="app_ln_like.rs example", width="48%" /></a>
-//! <a href="https://github.com/xliiv/fui/blob/master/examples/app_tar_like.rs"><img src="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_tar_like.png" alt="app_tar_like.rs example", width="48%" /></a>
+//! <ul>
 //!
+//! <li>
+//! <a href="https://github.com/xliiv/fui/blob/master/examples/app_ln_like.rs">app_ln_like</a>
+//! <details> <summary>Click me to see screen</summary>
+//! <a href="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_ln_like.png">
+//! <img src="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_ln_like.png" alt="app_ln_like.rs example", width="100%" />
+//! </a>
+//! </details>
+//! </li>
+//!
+//! <li>
+//! <a href="https://github.com/xliiv/fui/blob/master/examples/app_tar_like.rs">app_tar_like</a>
+//! <details> <summary>Click me to see screen</summary>
+//! <a href="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_tar_like.png">
+//! <img src="https://raw.githubusercontent.com/xliiv/fui/master/doc/app_tar_like.png" alt="app_tar_like.rs example", width="100%" />
+//! </a>
+//! </details>
+//! </li>
+//!
+//! </ul>
 //! </div>
+//!
 //!
 //! ## Description
 //!
