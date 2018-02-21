@@ -15,6 +15,7 @@ use super::is_value_from_select;
 
 pub type OnSubmit = Option<Rc<Fn(&mut Cursive, Rc<String>)>>;
 
+/// Single selection view with suggestions
 pub struct Autocomplete {
     view: LinearLayout,
 
@@ -26,6 +27,7 @@ pub struct Autocomplete {
 }
 
 impl Autocomplete {
+    /// Creates a new `Autocomplete` with passed `feeder`
     pub fn new<T: Feeder>(feeder: T) -> Autocomplete {
         let shown_count = 5;
 
@@ -60,7 +62,7 @@ impl Autocomplete {
         self.get_edit_view().get_content()
     }
 
-    /// Allow to submit values outside of completition
+    /// Allow to submit any text
     pub fn submit_anything(mut self) -> Self {
         self.submit_anything = true;
         self
@@ -73,7 +75,7 @@ impl Autocomplete {
         self
     }
 
-    /// Refresh listing
+    /// Refresh suggestions
     fn refresh_listing(&mut self) {
         let feeder = Rc::clone(&self.feeder);
         let text = self.get_edit_view().get_content();
@@ -89,7 +91,7 @@ impl Autocomplete {
         self.get_edit_view_mut().set_content((&*selection).clone());
     }
 
-    /// Checks if value comes from completition
+    /// Checks if value comes from suggestions
     pub fn is_value_from_select(&self, to_check: &str) -> bool {
         let select = self.get_select_view();
         is_value_from_select(select, to_check)
@@ -131,6 +133,7 @@ impl Autocomplete {
             .unwrap()
     }
 
+    /// Sets the function to be called when submit is triggered.
     pub fn set_on_submit<F>(&mut self, callback: F)
     where
         F: Fn(&mut Cursive, Rc<String>) + 'static,
@@ -138,6 +141,9 @@ impl Autocomplete {
         self.on_submit = Some(Rc::new(callback));
     }
 
+    /// Sets the function to be called when submit is triggered.
+    ///
+    /// Chainable variant.
     pub fn on_submit<F>(self, callback: F) -> Self
     where
         F: Fn(&mut Cursive, Rc<String>) + 'static,

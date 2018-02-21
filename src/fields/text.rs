@@ -5,9 +5,11 @@ use serde_json::value::Value;
 use fields;
 use fields::WidgetManager;
 
+/// Convienient wrapper around `Field<TextManager, String>`.
 pub struct Text;
 
 impl Text {
+    /// Creates a new `Field<TextManager, String>`.
     pub fn new<IS: Into<String>>(label: IS) -> fields::Field<TextManager, String> {
         fields::Field::new(label, TextManager, "".to_string())
     }
@@ -85,6 +87,7 @@ impl fields::FormField for fields::Field<TextManager, String> {
 }
 
 impl<W: WidgetManager> fields::Field<W, String> {
+    /// Sets initial `value` of `field`.
     pub fn initial<IS: Into<String>>(mut self, initial: IS) -> Self {
         self.initial = initial.into();
         self

@@ -14,6 +14,7 @@ use views::Autocomplete;
 type OnSelect = Option<Rc<Fn(&mut Cursive, Rc<String>)>>;
 type OnDeselect = Option<Rc<Fn(&mut Cursive, Rc<String>)>>;
 
+/// Multiple selection view with suggestions
 pub struct Multiselect {
     view: LinearLayout,
     select_anything: bool,
@@ -25,6 +26,7 @@ pub struct Multiselect {
 }
 
 impl Multiselect {
+    /// Creates a new `Multiselect` with passed `feeder`
     pub fn new<T: Feeder>(feeder: T) -> Self {
         let separator_width = 1;
         let layout = LinearLayout::horizontal()
@@ -95,7 +97,7 @@ impl Multiselect {
         selected_text
     }
 
-    ///Returns vec with selected items
+    /// Returns vec with selected items
     pub fn get_selected_items(&self) -> Vec<&String> {
         let select = self.get_selected_view();
         let mut idx = 0;
@@ -107,13 +109,13 @@ impl Multiselect {
         found
     }
 
-    ///Makes `items` selected
+    /// Makes `items` selected
     pub fn select_items(&mut self, items: Vec<String>) {
         let selected_view = self.get_selected_view_mut();
         selected_view.add_all_str(items);
     }
 
-    /// Checks if value is already selected
+    /// Checks if `to_check` is already selected
     pub fn is_value_selected(&self, to_check: &str) -> bool {
         let select = self.get_selected_view();
         is_value_from_select(select, to_check)
@@ -145,7 +147,7 @@ impl Multiselect {
         }
     }
 
-    /// Allows submitting values outside of completition
+    /// Allows selecting any text
     pub fn select_anything(mut self) -> Self {
         self.select_anything = true;
         self
@@ -157,6 +159,7 @@ impl Multiselect {
         self
     }
 
+    /// Sets the function to be called when select is triggered.
     pub fn set_on_select<F>(&mut self, callback: F)
     where
         F: Fn(&mut Cursive, Rc<String>) + 'static,
@@ -164,6 +167,9 @@ impl Multiselect {
         self.on_select = Some(Rc::new(callback));
     }
 
+    /// Sets the function to be called when select is triggered.
+    ///
+    /// Chainable variant.
     pub fn on_select<F>(self, callback: F) -> Self
     where
         F: Fn(&mut Cursive, Rc<String>) + 'static,
@@ -171,6 +177,7 @@ impl Multiselect {
         self.with(|v| v.set_on_select(callback))
     }
 
+    /// Sets the function to be called when deselect is triggered.
     pub fn set_on_deselect<F>(&mut self, callback: F)
     where
         F: Fn(&mut Cursive, Rc<String>) + 'static,
@@ -178,6 +185,9 @@ impl Multiselect {
         self.on_deselect = Some(Rc::new(callback));
     }
 
+    /// Sets the function to be called when deselect is triggered.
+    ///
+    /// Chainable variant.
     pub fn on_deselect<F>(self, callback: F) -> Self
     where
         F: Fn(&mut Cursive, Rc<String>) + 'static,

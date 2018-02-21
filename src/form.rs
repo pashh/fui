@@ -1,3 +1,4 @@
+//! Contains `form` related concetps like `FormView`.
 use std::rc::Rc;
 use std::collections::HashMap;
 
@@ -13,6 +14,7 @@ use fields::FormField;
 type OnSubmit = Option<Rc<Fn(&mut Cursive, Value)>>;
 type OnCancel = Option<Rc<Fn(&mut Cursive)>>;
 
+/// Aggregates `fields` and handles process of `submitting` (or `canceling`).
 pub struct FormView {
     view: Dialog,
 
@@ -21,6 +23,7 @@ pub struct FormView {
     on_cancel: OnCancel,
 }
 impl FormView {
+    /// Creates a new `FormView` with two buttons `submit` and `cancel`.
     pub fn new() -> Self {
         let layout = Dialog::new()
             .content(LinearLayout::vertical())
@@ -34,6 +37,7 @@ impl FormView {
         }
     }
 
+    /// Appends `field` to field list.
     pub fn field<V: FormField + 'static>(mut self, field: V) -> Self {
         let widget = field.build_widget();
         self.view
@@ -46,6 +50,7 @@ impl FormView {
         self
     }
 
+    /// Sets the function to be called when submit is triggered.
     pub fn set_on_submit<F>(&mut self, callback: F)
     where
         F: Fn(&mut Cursive, Value) + 'static,
@@ -53,6 +58,9 @@ impl FormView {
         self.on_submit = Some(Rc::new(callback));
     }
 
+    /// Sets the function to be called when submit is triggered.
+    ///
+    /// Chainable variant.
     pub fn on_submit<F>(mut self, callback: F) -> Self
     where
         F: Fn(&mut Cursive, Value) + 'static,
@@ -61,6 +69,7 @@ impl FormView {
         self
     }
 
+    /// Sets the function to be called when cancel is triggered.
     pub fn set_on_cancel<F>(&mut self, callback: F)
     where
         F: Fn(&mut Cursive) + 'static,
@@ -68,6 +77,9 @@ impl FormView {
         self.on_cancel = Some(Rc::new(callback));
     }
 
+    /// Sets the function to be called when cancel is triggered.
+    ///
+    /// Chainable variant.
     pub fn on_cancel<F>(mut self, callback: F) -> Self
     where
         F: Fn(&mut Cursive) + 'static,

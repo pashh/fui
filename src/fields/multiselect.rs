@@ -9,10 +9,11 @@ use feeders::Feeder;
 use fields::{label_with_help_layout, Field, FormField, WidgetManager};
 use views;
 
-/// Convienient wrapper around Field<MultiselectManager, Vec<String>>
+/// Convienient wrapper around `Field<MultiselectManager, Vec<String>>`.
 pub struct Multiselect;
 
 impl Multiselect {
+    /// Creates a new `Field<MultiselectManager, Vec<String>>`.
     pub fn new<IS: Into<String>, F: Feeder>(
         label: IS,
         feeder: F,
@@ -115,6 +116,7 @@ impl FormField for Field<MultiselectManager, Vec<String>> {
 }
 
 impl<W: WidgetManager> Field<W, Vec<String>> {
+    /// Sets initial `value` of `field`.
     pub fn initial<U: Deref<Target = str>>(mut self, initial: Vec<U>) -> Self {
         self.initial = initial
             .iter()

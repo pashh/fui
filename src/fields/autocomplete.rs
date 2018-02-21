@@ -9,9 +9,11 @@ use fields::WidgetManager;
 use fields;
 use views;
 
+/// Convienient wrapper around `Field<AutocompleteManager, String>`.
 pub struct Autocomplete;
 
 impl Autocomplete {
+    /// Creates a new `Field<AutocompleteManager, String>`.
     pub fn new<IS: Into<String>, F: Feeder>(
         label: IS,
         feeder: F,

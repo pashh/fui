@@ -7,7 +7,6 @@ Add form interface for your CLI program.
 
 ## TODO:
 
-* docs
 * select in autocomplete load values while scrolling
 * support user's history!
     * make fill-error-correct flow pleasent
