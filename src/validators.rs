@@ -1,13 +1,16 @@
+//! Provides data validators used by `fields`.
+//TODO:: Simplify examples here
 use regex::Regex;
 use std::ops::Deref;
 use std::path::Path;
 
+/// Adds behaviour of validation.
 pub trait Validator {
+    /// Validates data returning None (when Ok) or String with error.
     fn validate(&self, data: &str) -> Option<String>;
 }
 
-#[derive(Clone, Debug)]
-/// Ensure data is included
+/// Ensures data is included.
 ///
 /// Examples
 ///
@@ -18,6 +21,7 @@ pub trait Validator {
 /// assert_eq!(Required.validate("some-data"), None);
 /// assert_eq!(Required.validate(""), Some("Field is required".to_string()));
 /// ```
+#[derive(Clone, Debug)]
 pub struct Required;
 
 impl Validator for Required {
@@ -30,26 +34,19 @@ impl Validator for Required {
     }
 }
 
-/// Ensure path is free
+/// Ensures path is free.
 ///
 /// Examples
 ///
 /// ```
 /// extern crate fui;
-/// extern crate tempdir;
 ///
 /// use fui::validators::PathFree;
 /// use fui::validators::Validator;
-/// use std::fs::File;
-/// use tempdir::TempDir;
 ///
 /// # fn main() {
-/// let temp_dir = TempDir::new("fui").unwrap();
-/// let file_path = temp_dir.path().join("some-file");
-///
-/// assert_eq!(PathFree.validate(file_path.as_path().to_str().unwrap()), None);
-/// File::create(&file_path.as_path()).unwrap();
-/// assert_eq!(PathFree.validate(file_path.as_path().to_str().unwrap()), Some("Path is already used".to_string()));
+/// assert_eq!(PathFree.validate("./free-path"), None);
+/// assert_eq!(PathFree.validate("./"), Some("Path is already used".to_string()));
 /// # }
 ///
 /// ```
@@ -67,28 +64,20 @@ impl Validator for PathFree {
     }
 }
 
-/// Ensure data is dir path which exists
+/// Ensures data is dir path which exists.
 ///
 /// Examples
 ///
 /// ```
 /// extern crate fui;
-/// extern crate tempdir;
 ///
 /// use fui::validators::DirExists;
 /// use fui::validators::Validator;
-/// use tempdir::TempDir;
-/// use std::fs::File;
 ///
 /// # fn main() {
-/// let existing_dir = TempDir::new("fui").unwrap();
-/// let existing_file = existing_dir.path().join("some-file");
-/// File::create(&existing_file).unwrap();
-/// let missing_dir = existing_dir.path().join("missing-dir");
-///
-/// assert_eq!(DirExists.validate(existing_dir.path().to_str().unwrap()), None);
-/// assert_eq!(DirExists.validate(existing_file.to_str().unwrap()), Some("It's not a dir".to_string()));
-/// assert_eq!(DirExists.validate(missing_dir.to_str().unwrap()).unwrap(), "Dir doesn't exist");
+/// assert_eq!(DirExists.validate("./src"), None);
+/// assert_eq!(DirExists.validate("./Cargo.toml"), Some("It's not a dir".to_string()));
+/// assert_eq!(DirExists.validate("./missing-dir").unwrap(), "Dir doesn't exist");
 /// # }
 /// ```
 #[derive(Clone, Debug)]
@@ -109,28 +98,20 @@ impl Validator for DirExists {
     }
 }
 
-/// Ensure data is file path which exists
+/// Ensures data is file path which exists.
 ///
 /// Examples
 ///
 /// ```
 /// extern crate fui;
-/// extern crate tempdir;
 ///
 /// use fui::validators::FileExists;
 /// use fui::validators::Validator;
-/// use tempdir::TempDir;
-/// use std::fs::File;
 ///
 /// # fn main() {
-/// let existing_dir = TempDir::new("fui").unwrap();
-/// let existing_file = existing_dir.path().join("some-file");
-/// File::create(&existing_file).unwrap();
-/// let missing_file = existing_dir.path().join("missing-file");
-///
-/// assert_eq!(FileExists.validate(existing_file.to_str().unwrap()), None);
-/// assert_eq!(FileExists.validate(missing_file.to_str().unwrap()), Some("File doesn't exist".to_string()));
-/// assert_eq!(FileExists.validate(existing_dir.path().to_str().unwrap()), Some("It's not a file".to_string()));
+/// assert_eq!(FileExists.validate("./Cargo.toml"), None);
+/// assert_eq!(FileExists.validate("./missing-file"), Some("File doesn't exist".to_string()));
+/// assert_eq!(FileExists.validate("./src"), Some("It's not a file".to_string()));
 /// # }
 /// ```
 #[derive(Clone, Debug)]
@@ -151,7 +132,7 @@ impl Validator for FileExists {
     }
 }
 
-/// Ensure if value is one of options
+/// Ensures value is one of provided options.
 ///
 /// Examples
 ///

@@ -1,3 +1,5 @@
+//! Data providers for `views` with suggestion feature (like `Autocomplete`, `Multiselect`).
+
 use glob::{glob_with, MatchOptions};
 use std::env;
 use std::fs;
@@ -5,8 +7,9 @@ use std::path::Path;
 use std::fmt::Display;
 use std::rc::Rc;
 
-// TODO: this should be replaced with regular Iterator?
+/// Makes data querable.
 pub trait Feeder: 'static {
+    /// Returns data filtered by `text`, `position` limited to `items_count`.
     fn query(&self, text: &str, position: isize, items_count: usize) -> Vec<String>;
 }
 
@@ -16,6 +19,18 @@ enum DirItemType {
     All,
 }
 
+/// Query file system for dirs, files, etc.
+///
+/// ```
+/// # extern crate fui;
+/// # use fui::feeders::DirItems;
+/// # fn main() {
+///
+/// // Available in two variants:
+/// let files_and_dirs = DirItems::new(); // suggests files and dirs
+/// let only_dirs = DirItems::dirs(); // suggests only dirs
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub struct DirItems {
     dir_item_type: DirItemType,
@@ -23,12 +38,14 @@ pub struct DirItems {
 }
 
 impl DirItems {
+    /// Creates a new `DirItems` which suggests files and dirs.
     pub fn new() -> Self {
         DirItems {
             dir_item_type: DirItemType::All,
             use_full_paths: false,
         }
     }
+    /// Creates a new `DirItems` which suggests only dirs.
     pub fn dirs() -> Self {
         DirItems {
             dir_item_type: DirItemType::Dir,
@@ -36,13 +53,14 @@ impl DirItems {
         }
     }
 
+    /// Makes suggestion to be absolute paths (like `/home/user`).
     pub fn use_full_paths(mut self) -> Self {
         self.use_full_paths = true;
         self
     }
 }
 
-/// Add star to last component of path
+/// Add star to last component of path.
 fn add_glob<P: AsRef<str>>(path: P) -> String {
     if path.as_ref().ends_with("/") {
         return format!("{}*", path.as_ref());

@@ -16,14 +16,14 @@ fn main() {
     loop {
         Fui::new()
             .action(
-                "action1 description",
+                "ACTION1: description",
                 FormView::new().field(Text::new("action1 data").help("help for action1 data")),
                 |v| {
                     println!("user input (from callback) {:?}", v);
                 },
             )
             .action(
-                "action2 description",
+                "ACTION2: description",
                 FormView::new().field(Text::new("action2 data").help("help for action2 data")),
                 hdlr,
             )

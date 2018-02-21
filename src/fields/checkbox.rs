@@ -7,9 +7,11 @@ use serde_json::value::Value;
 use fields;
 use fields::WidgetManager;
 
+/// Convienient wrapper around `Field<CheckboxManager, bool>`.
 pub struct Checkbox;
 
 impl Checkbox {
+    /// Creates a new `Field<CheckboxManager, bool>`.
     pub fn new<IS: Into<String>>(label: IS) -> fields::Field<CheckboxManager, bool> {
         fields::Field::new(label, CheckboxManager, false)
     }
@@ -74,6 +76,7 @@ impl fields::FormField for fields::Field<CheckboxManager, bool> {
 }
 
 impl<W: WidgetManager> fields::Field<W, bool> {
+    /// Sets initial `value` of `field`.
     pub fn initial(mut self, value: bool) -> Self {
         self.initial = value;
         self
