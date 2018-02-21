@@ -1,6 +1,6 @@
-# Fui
+# fui
 
-Add form interface for your CLI program.
+Add form interface to your CLI program.
 
 ## Note:
 **Use it at own risk!!**
