@@ -169,6 +169,13 @@ impl ViewWrapper for Autocomplete {
                 self.refresh_listing();
                 EventResult::Consumed(None)
             }
+            Event::Key(Key::Down) | Event::Key(Key::Up) => {
+                // handle up/down selection
+                self.with_view_mut(|v| v.on_event(event))
+                    .unwrap_or(EventResult::Ignored);
+                self.selection_to_edit();
+                EventResult::Consumed(None)
+            }
             Event::CtrlChar('p') => {
                 // move selection up
                 {
